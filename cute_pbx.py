@@ -13,7 +13,7 @@ def parse_uri(uri):
     <sip:username@hostname>.
     Returns a tuple (username, hostname)
     '''
-    r = re.match(".*<sip:([\w\d]+)@([\w\d\.]+)>", uri)
+    r = re.match(".*<sip:([\w\d]+)@([\w\d\.]+).*>", uri)
     return r.groups(0)
 
 
@@ -128,7 +128,6 @@ class SipProxy(sip.Proxy):
         self.return_OK(message, (peer_host, self.PORT))
 
     def handle_INVITE(self, message, addr):
-        log.msg(message.toString())
         frm, to = message.headers["from"][0], message.headers["to"][0]
         peer_user, _ = parse_uri(to)
         peer_host = self.db.getuserhost(peer_user)
@@ -147,9 +146,8 @@ class SipProxy(sip.Proxy):
             self.redirect(message, (peer_host, self.PORT))
 
     def handle_REGISTER(self, message, addr):
-        log.msg(message.toString())
-        log.msg("REGISTER from {}".format(message.headers["to"]))
-        user, host = parse_uri(message.headers["to"][0])
+        log.msg("REGISTER from {}".format(message.headers["contact"]))
+        user, host = parse_uri(message.headers["contact"][0])
         if self.check_user(message):
             self.db.updateuser(user, host)
             log.msg("{} registered OK".format(user))
