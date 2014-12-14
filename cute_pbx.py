@@ -98,6 +98,7 @@ class SipProxy(sip.Proxy):
         self.transport.write(message.toString(), addr)
 
     def handle_request(self, message, addr):
+        log.msg(message.toString())
         if hasattr(message, "code"):
             if message.code == 180:
                 handling_method = "handle_RINGING"
@@ -126,6 +127,16 @@ class SipProxy(sip.Proxy):
         frm, to = message.headers["from"][0], message.headers["to"][0]
         _, peer_host = parse_uri(to)
         self.return_OK(message, (peer_host, self.PORT))
+
+    def handle_BYE(self, message, addr):
+        frm, to = message.headers["from"][0], message.headers["to"][0]
+        _, peer_host = parse_uri(to)
+        self.redirect(message, (peer_host, self.PORT))
+
+    def handle_CANCEL(self, message, addr):
+        frm, to = message.headers["from"][0], message.headers["to"][0]
+        _, peer_host = parse_uri(to)
+        self.redirect(message, (peer_host, self.PORT))
 
     def handle_INVITE(self, message, addr):
         frm, to = message.headers["from"][0], message.headers["to"][0]
